@@ -18,7 +18,7 @@ class BaseNetwork {
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
       final accessToken = body['accessToken'];
-      final user = body['safeAdminData'];
+      final user = body['safeUserData'];
       if (accessToken != null && user != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', accessToken);
