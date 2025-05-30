@@ -2,8 +2,8 @@ import 'package:project_tpm/models/konser_model.dart';
 import 'package:project_tpm/networks/base_network.dart';
 
 abstract class DetailKonserView {
-  void showloading();
-  void hideloading();
+  void showLoading();
+  void hideLoading();
   void showDetailData(Konser detail);
   void showError(String msg);
 }
@@ -13,7 +13,7 @@ class DetailKonserPresenter {
   DetailKonserPresenter(this.view);
 
   Future<void> loadDetailKonser(String endpoint, int id) async {
-    view.showloading();
+    view.showLoading();
     try {
       final Map<String, dynamic> data =
           await BaseNetwork.getDetailData(endpoint, id);
@@ -22,7 +22,7 @@ class DetailKonserPresenter {
     } catch (e) {
       view.showError(e.toString());
     } finally {
-      view.hideloading();
+      view.hideLoading();
     }
   }
 }

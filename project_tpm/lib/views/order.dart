@@ -61,7 +61,7 @@ class _OrderPageState extends State<OrderPage>
   }
 
   @override
-  void hideloading() {
+  void hideLoading() {
     setState(() {
       _isLoading = false;
     });
@@ -90,7 +90,7 @@ class _OrderPageState extends State<OrderPage>
   }
 
   @override
-  void showloading() {
+  void showLoading() {
     setState(() {
       _isLoading = true;
     });
@@ -176,57 +176,6 @@ class _OrderPageState extends State<OrderPage>
                                   ),
                                 ),
                               ],
-                            ),
-                            Text("${widget.endpoint} / ${widget.id}"),
-                            // Nama
-                            TextField(
-                              controller: _namaController,
-                              style: const TextStyle(color: Colors.white),
-                              enabled: false,
-                              decoration: InputDecoration(
-                                labelText: 'Nama',
-                                labelStyle:
-                                    const TextStyle(color: Colors.white70),
-                                filled: true,
-                                fillColor: Colors.white10,
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Umur
-                            TextField(
-                              controller: _umurController,
-                              style: const TextStyle(color: Colors.white),
-                              enabled: false,
-                              decoration: InputDecoration(
-                                labelText: 'Umur',
-                                labelStyle:
-                                    const TextStyle(color: Colors.white70),
-                                filled: true,
-                                fillColor: Colors.white10,
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 16,
-                            ),
-
-                            // EMAIL
-                            TextField(
-                              controller: _emailController,
-                              style: const TextStyle(color: Colors.white),
-                              enabled: false,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                labelStyle:
-                                    const TextStyle(color: Colors.white70),
-                                filled: true,
-                                fillColor: Colors.white10,
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(

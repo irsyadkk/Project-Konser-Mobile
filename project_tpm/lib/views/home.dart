@@ -3,6 +3,7 @@ import 'package:project_tpm/models/konser_model.dart';
 import 'package:project_tpm/presenters/konser_presenter.dart';
 import 'package:project_tpm/views/detail.dart';
 import 'package:project_tpm/views/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,24 +17,22 @@ class _HomePageState extends State<HomePage> implements KonserView {
   bool _isloading = true;
   List<Konser> _konserList = [];
   String? _errorMsg;
-  String _currentEndpoint = 'konser';
+  String? userName;
 
   @override
   void initState() {
     super.initState();
     _presenter = KonserPresenter(this);
-    _presenter.loadKonserData(_currentEndpoint);
+    getUserName();
+    fetchData();
   }
 
-  void fetchData(String endpoint) {
-    setState(() {
-      _currentEndpoint = endpoint;
-      _presenter.loadKonserData(endpoint);
-    });
+  void fetchData() {
+    _presenter.loadKonserData('konser');
   }
 
   @override
-  void hideloading() {
+  void hideLoading() {
     setState(() {
       _isloading = false;
     });
@@ -54,19 +53,28 @@ class _HomePageState extends State<HomePage> implements KonserView {
   }
 
   @override
-  void showloading() {
+  void showLoading() {
     setState(() {
       _isloading = true;
+    });
+  }
+
+  Future<void> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? nama = prefs.getString('user_nama');
+    setState(() {
+      userName = nama;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final Color yellowAccent = const Color(0xfff7c846);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(_currentEndpoint),
+        title: Text('Halo, $userName !'),
         backgroundColor: Colors.black,
         foregroundColor: yellowAccent,
         actions: [
@@ -86,36 +94,53 @@ class _HomePageState extends State<HomePage> implements KonserView {
         child: Column(
           children: [
             Expanded(
-                child: _isloading
-                    ? Center(child: CircularProgressIndicator())
-                    : _errorMsg != null
-                        ? Center(child: Text("Error $_errorMsg"))
-                        : ListView.builder(
-                            itemCount: _konserList.length,
-                            itemBuilder: (context, index) {
-                              final konser = _konserList[index];
-                              return _movieCard(konser, context);
-                            })),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                    onPressed: () => fetchData('konser'),
-                    child: Text("Konser")),
-                SizedBox(
-                  width: 10,
-                ),
-                ElevatedButton(
-                    onPressed: () => fetchData('tiket'), child: Text("Tiket")),
-                SizedBox(
-                  width: 10,
-                ),
-                ElevatedButton(
-                    onPressed: () => fetchData('pengunjung'),
-                    child: Text("Pengunjung")),
-              ],
-            )
+              child: _isloading
+                  ? Center(
+                      child: CircularProgressIndicator(color: yellowAccent))
+                  : _errorMsg != null
+                      ? Center(
+                          child: Text(
+                            "Error: $_errorMsg",
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _konserList.length,
+                          itemBuilder: (context, index) {
+                            final konser = _konserList[index];
+                            return _movieCard(konser, context);
+                          },
+                        ),
+            ),
+            const SizedBox(height: 12),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomButton(
+      String text, VoidCallback onPressed, bool isSelected) {
+    final Color yellowAccent = const Color(0xfff7c846);
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? yellowAccent : Colors.transparent,
+        foregroundColor: isSelected ? Colors.black : yellowAccent,
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+          side: BorderSide(color: yellowAccent, width: 2),
+        ),
+        elevation: isSelected ? 8 : 0,
+        shadowColor:
+            isSelected ? yellowAccent.withOpacity(0.6) : Colors.transparent,
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
         ),
       ),
     );
@@ -124,19 +149,21 @@ class _HomePageState extends State<HomePage> implements KonserView {
   Widget _movieCard(Konser konser, BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white10,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
+        leading: Image.network(konser.poster),
         title: Text(konser.nama,
             style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold)),
         subtitle:
-            Text(konser.tanggal, style: const TextStyle(color: Colors.white)),
-        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.red),
+            Text(konser.tanggal, style: const TextStyle(color: Colors.white70)),
+        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.redAccent),
         onTap: () {
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) =>
-                      DetailPage(id: konser.id, endpoint: _currentEndpoint)));
+                  builder: (context) => DetailPage(id: konser.id)));
         },
       ),
     );

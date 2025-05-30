@@ -5,8 +5,7 @@ import 'package:project_tpm/views/order.dart';
 
 class DetailPage extends StatefulWidget {
   final int id;
-  final String endpoint;
-  const DetailPage({super.key, required this.id, required this.endpoint});
+  const DetailPage({super.key, required this.id});
 
   @override
   State<DetailPage> createState() => _DetailPageState();
@@ -26,11 +25,11 @@ class _DetailPageState extends State<DetailPage> implements DetailKonserView {
   }
 
   void fetchDetail() {
-    presenter.loadDetailKonser(widget.endpoint, widget.id);
+    presenter.loadDetailKonser('konser', widget.id);
   }
 
   @override
-  void hideloading() {
+  void hideLoading() {
     setState(() {
       _isLoading = false;
     });
@@ -51,7 +50,7 @@ class _DetailPageState extends State<DetailPage> implements DetailKonserView {
   }
 
   @override
-  void showloading() {
+  void showLoading() {
     setState(() {
       _isLoading = true;
     });
@@ -81,6 +80,7 @@ class _DetailPageState extends State<DetailPage> implements DetailKonserView {
                     ? SingleChildScrollView(
                         child: Column(
                           children: [
+                            Image.network(_detailData!.poster),
                             Row(
                               children: [
                                 Expanded(

@@ -126,6 +126,7 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
 
                       // Email
                       TextField(
+                        keyboardType: TextInputType.emailAddress,
                         controller: _emailController,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
@@ -181,9 +182,6 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
                         ),
                         child: const Text('Daftar'),
                       ),
-                      _errormsg != null
-                          ? Center(child: Text("Error $_errormsg"))
-                          : Text("Sucess")
                     ],
                   ),
                 ),

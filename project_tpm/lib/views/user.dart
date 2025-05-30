@@ -35,29 +35,37 @@ class UserPage extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 60,
-              backgroundImage: AssetImage('assets/images/user.jpg'), // Anggap aja ini gambar
+              backgroundImage:
+                  AssetImage('assets/images/user.jpg'), // Anggap aja ini gambar
             ),
             const SizedBox(height: 16),
-            Text('Kucing', style: TextStyle(color: yellowAccent, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Kucing',
+                style: TextStyle(
+                    color: yellowAccent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text('Kucing@example.com', style: TextStyle(color: Colors.white70)),
             Text('+62 812-3456-7890', style: TextStyle(color: Colors.white70)),
             const SizedBox(height: 24),
             Divider(color: Colors.white24),
-
             const SizedBox(height: 16),
-            Text('Film yang Sudah Ditonton', style: TextStyle(color: yellowAccent, fontSize: 18, fontWeight: FontWeight.bold)),
-
+            Text('Film yang Sudah Ditonton',
+                style: TextStyle(
+                    color: yellowAccent,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             _filmItem('Fast Furious', 'Action - Sci-Fi', redAccent),
             const SizedBox(height: 12),
-
             _filmItem('Sinetron', 'Drama - Indonesia', greenAccent),
             const SizedBox(height: 24),
-
-            Text('List Tontonan Saya', style: TextStyle(color: yellowAccent, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('List Tontonan Saya',
+                style: TextStyle(
+                    color: yellowAccent,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-
             _filmItem('Warkop DKI', 'Comedy - Lucu', blueAccent),
             const SizedBox(height: 12),
             _filmItem('Jumbo', 'Kartun - Animasi', purpleAccent),
@@ -80,7 +88,11 @@ class UserPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
+              Text(title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                      fontSize: 16)),
               Text(genre, style: const TextStyle(color: Colors.black87)),
             ],
           ),

@@ -27,10 +27,14 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
   }
 
   void loginHandler() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
     final data = {
-      'email': _emailController.text,
-      'pass': _passwordController.text,
+      'email': email,
+      'pass': password,
     };
+
     presenter.loginUser('login', data);
   }
 
@@ -43,10 +47,18 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
 
   @override
   void onLoginSuccess(User user) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const AdminPage()),
-    );
+    // Cek email, menentukan page selanjutnya
+    if (user.email == "admin@gmail.com") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminPage()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    }
   }
 
   @override
@@ -63,51 +75,33 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
     });
   }
 
-  // void _login() {
-  //   String username = _usernameController.text.trim();
-  //   String password = _passwordController.text;
-
-  //   if (username == '.' && password == '.') {
-  //     setState(() => _errorText = '');
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const AdminPage()),
-  //     );
-  //   } else if (username == 'u' && password == 'u') {
-  //     setState(() => _errorText = '');
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const HomePage()),
-  //     );
-  //   } else {
-  //     setState(() => _errorText = 'XXX Username atau Password salah! XXX');
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Center(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      Text('LOGIN',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold)),
+                      const Text(
+                        'LOGIN',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 32),
                       TextField(
+                        keyboardType: TextInputType.emailAddress,
                         controller: _emailController,
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          labelStyle: TextStyle(color: Colors.white70),
+                          labelStyle: const TextStyle(color: Colors.white70),
                           filled: true,
                           fillColor: Colors.white10,
                           border: OutlineInputBorder(
@@ -118,10 +112,10 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                       TextField(
                         controller: _passwordController,
                         obscureText: _obscureText,
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          labelStyle: TextStyle(color: Colors.white70),
+                          labelStyle: const TextStyle(color: Colors.white70),
                           filled: true,
                           fillColor: Colors.white10,
                           border: OutlineInputBorder(
@@ -140,38 +134,41 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(_errormsg!,
-                          style: TextStyle(color: Colors.redAccent)),
+                      if (_errormsg != null && _errormsg!.isNotEmpty)
+                        Text(_errormsg!,
+                            style: const TextStyle(color: Colors.redAccent)),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: loginHandler,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xfff7c846),
+                          backgroundColor: const Color(0xfff7c846),
                           foregroundColor: Colors.black,
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 100, vertical: 16),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: Text('Login',
+                        child: const Text('Login',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 12),
-                      Text('Belum punya akun? '),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const DaftarPage()),
-                          );
-                        },
-                        child: Text('Daftar dulu aja',
-                            style: TextStyle(color: Colors.blue)),
-                      ),
-                      _errormsg != null
-                          ? Center(child: Text("Error $_errormsg"))
-                          : Text("Success")
+                      Row(
+                        children: [
+                          Padding(padding: EdgeInsets.all(24.0)),
+                          const Text('Belum punya akun?'),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const DaftarPage()),
+                              );
+                            },
+                            child: const Text('Daftar dulu aja !',
+                                style: TextStyle(color: Colors.blue)),
+                          ),
+                        ],
+                      )
                     ],
                   ),
                 ),

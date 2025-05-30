@@ -1,8 +1,8 @@
 class User {
   final int id;
+  final String nama;
   final String email;
   final int umur;
-  final String nama;
   final String? accessToken;
 
   User({
@@ -13,12 +13,12 @@ class User {
     this.accessToken,
   });
 
-  factory User.fromJson(Map<String, dynamic> json, String? token) {
+  factory User.fromJson(Map<String, dynamic> json, [String? token]) {
     return User(
       id: json['id'] ?? 0,
-      email: json['email'] ?? "",
-      umur: json['umur'] ?? "",
       nama: json['nama'] ?? "",
+      email: json['email'] ?? "",
+      umur: json['umur'] ?? 0,
       accessToken: token,
     );
   }

@@ -110,4 +110,55 @@ class BaseNetwork {
       throw Exception("Failed to make order...${response.statusCode}");
     }
   }
+
+  //EDIT
+  static Future<bool> edit(
+      String endpoint, Map<String, dynamic> data, int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final response = await http.patch(Uri.parse('$baseUrl$endpoint/$id'),
+        headers: {
+          'content-type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data));
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception("Failed to edit data...${response.statusCode}");
+    }
+  }
+
+  //POST
+  static Future<bool> post(String endpoint, Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final response = await http.post(Uri.parse('$baseUrl$endpoint'),
+        headers: {
+          'content-type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data));
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception("Failed to add data...${response.statusCode}");
+    }
+  }
+
+  //DELETE
+  static Future<bool> delete(String endpoint, int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final response =
+        await http.delete(Uri.parse('$baseUrl$endpoint/$id'), headers: {
+      'content-type': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception("Failed to delete data...${response.statusCode}");
+    }
+  }
 }
