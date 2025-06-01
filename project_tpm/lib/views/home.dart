@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:project_tpm/models/konser_model.dart';
+import 'package:project_tpm/models/profile_photo.dart';
 import 'package:project_tpm/presenters/konser_presenter.dart';
 import 'package:project_tpm/views/detail.dart';
-import 'package:project_tpm/views/login.dart';
+import 'package:project_tpm/views/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,32 +20,36 @@ class _HomePageState extends State<HomePage> implements KonserView {
   late KonserPresenter _presenter;
   bool _isloading = true;
   List<Konser> _konserList = [];
+  List<Konser> _filteredKonserList = [];
   String? _errorMsg;
   String? userName;
+  String? localPhotoPath;
+
+  bool _isSearching = false;
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _presenter = KonserPresenter(this);
+    _searchController.addListener(_onSearchChanged);
     getUserName();
     fetchData();
-  }
-
-  void fetchData() {
-    _presenter.loadKonserData('konser');
+    loadLocalPhoto();
   }
 
   @override
-  void hideLoading() {
-    setState(() {
-      _isloading = false;
-    });
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
-  @override
-  void showError(String msg) {
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
     setState(() {
-      _errorMsg = msg;
+      _filteredKonserList = _konserList
+          .where((konser) => konser.nama.toLowerCase().contains(query))
+          .toList();
     });
   }
 
@@ -49,14 +57,24 @@ class _HomePageState extends State<HomePage> implements KonserView {
   void showKonserList(List<Konser> konserList) {
     setState(() {
       _konserList = konserList;
+      _filteredKonserList = konserList;
     });
   }
 
-  @override
-  void showLoading() {
-    setState(() {
-      _isloading = true;
-    });
+  Future<void> loadLocalPhoto() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('user_email');
+    if (email != null) {
+      final box = Hive.box<ProfilePhoto>('profile_photos');
+      final photo = box.get(email);
+      setState(() {
+        localPhotoPath = photo?.photoPath;
+      });
+    }
+  }
+
+  void fetchData() {
+    _presenter.loadKonserData('konser');
   }
 
   Future<void> getUserName() async {
@@ -68,103 +86,151 @@ class _HomePageState extends State<HomePage> implements KonserView {
   }
 
   @override
+  void hideLoading() => setState(() => _isloading = false);
+  @override
+  void showError(String msg) => setState(() => _errorMsg = msg);
+  @override
+  void showLoading() => setState(() => _isloading = true);
+
+  @override
   Widget build(BuildContext context) {
     final Color yellowAccent = const Color(0xfff7c846);
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('Halo, $userName !'),
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.black,
         foregroundColor: yellowAccent,
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                cursorColor: yellowAccent,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Cari Konser...',
+                  hintStyle: TextStyle(color: Colors.white70),
+                  border: InputBorder.none,
+                ),
+              )
+            : Text('Halo, $userName !'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.logout, color: yellowAccent),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-              );
-            },
+          if (_isSearching)
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                  _filteredKonserList = _konserList; // Reset list
+                });
+              },
+            )
+          else
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                setState(() {
+                  _isSearching = true;
+                });
+              },
+            ),
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+                loadLocalPhoto();
+              },
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.grey,
+                backgroundImage: localPhotoPath != null
+                    ? FileImage(File(localPhotoPath!))
+                    : null,
+                child: localPhotoPath == null
+                    ? const Icon(Icons.person, size: 30, color: Colors.black)
+                    : null,
+              ),
+            ),
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Expanded(
-              child: _isloading
-                  ? Center(
-                      child: CircularProgressIndicator(color: yellowAccent))
-                  : _errorMsg != null
-                      ? Center(
-                          child: Text(
-                            "Error: $_errorMsg",
-                            style: TextStyle(color: Colors.redAccent),
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: _konserList.length,
-                          itemBuilder: (context, index) {
-                            final konser = _konserList[index];
-                            return _movieCard(konser, context);
-                          },
-                        ),
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
+        child: _isloading
+            ? Center(child: CircularProgressIndicator(color: yellowAccent))
+            : _errorMsg != null
+                ? Center(
+                    child: Text(
+                      "Error: $_errorMsg",
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _filteredKonserList.length,
+                    itemBuilder: (context, index) {
+                      final konser = _filteredKonserList[index];
+                      return _concertCard(konser);
+                    },
+                  ),
       ),
     );
   }
 
-  Widget _buildCustomButton(
-      String text, VoidCallback onPressed, bool isSelected) {
-    final Color yellowAccent = const Color(0xfff7c846);
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? yellowAccent : Colors.transparent,
-        foregroundColor: isSelected ? Colors.black : yellowAccent,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-          side: BorderSide(color: yellowAccent, width: 2),
-        ),
-        elevation: isSelected ? 8 : 0,
-        shadowColor:
-            isSelected ? yellowAccent.withOpacity(0.6) : Colors.transparent,
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-    );
-  }
-
-  Widget _movieCard(Konser konser, BuildContext context) {
+  Widget _concertCard(Konser konser) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: Colors.white10,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        leading: Image.network(konser.poster),
-        title: Text(konser.nama,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold)),
-        subtitle:
-            Text(konser.tanggal, style: const TextStyle(color: Colors.white70)),
-        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.redAccent),
+      color: Colors.grey[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => DetailPage(id: konser.id)));
+            context,
+            MaterialPageRoute(builder: (_) => DetailPage(id: konser.id)),
+          );
         },
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(
+                konser.poster,
+                height: 220,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    konser.nama,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${konser.lokasi}, ${konser.tanggal}',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

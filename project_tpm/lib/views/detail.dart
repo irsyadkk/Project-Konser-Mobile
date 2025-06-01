@@ -58,98 +58,140 @@ class _DetailPageState extends State<DetailPage> implements DetailKonserView {
 
   @override
   Widget build(BuildContext context) {
+    final Color yellowAccent = const Color(0xfff7c846);
+
     return Scaffold(
-        appBar: AppBar(
-          title: _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : _errorMsg != null
-                  ? Center(child: Text("Error $_errorMsg"))
-                  : _detailData != null
-                      ? Text(
-                          _detailData?.nama ?? "???",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      : Text("Failed to get Name..."),
-          centerTitle: true,
-        ),
-        body: _isLoading
-            ? Center(child: CircularProgressIndicator())
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: yellowAccent,
+        title: _isLoading
+            ? const CircularProgressIndicator()
             : _errorMsg != null
-                ? Center(child: Text("Error $_errorMsg"))
-                : _detailData != null
-                    ? SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Image.network(_detailData!.poster),
-                            Row(
+                ? Text("Error: $_errorMsg")
+                : Text(_detailData?.nama ?? "Detail Konser"),
+        centerTitle: true,
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: yellowAccent))
+          : _errorMsg != null
+              ? Center(
+                  child: Text("Error: $_errorMsg",
+                      style: const TextStyle(color: Colors.redAccent)),
+                )
+              : _detailData != null
+                  ? SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(30),
+                              bottomRight: Radius.circular(30),
+                            ),
+                            child: Image.network(
+                              _detailData!.poster,
+                              width: double.infinity,
+                              height: 550,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Card(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                            "Tanggal",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w600),
+                                _infoCard("Tanggal", _detailData!.tanggal),
+                                const SizedBox(height: 12),
+                                _infoCard("Lokasi", _detailData!.lokasi),
+                                const SizedBox(height: 12),
+                                _infoCard(
+                                    "Bintang Tamu", _detailData!.bintangtamu),
+                                const SizedBox(height: 24),
+                                Center(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: yellowAccent,
+                                      foregroundColor: Colors.black,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 40, vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      elevation: 6,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => OrderPage(
+                                            id: _detailData!.id,
+                                            endpoint: "tiket",
                                           ),
-                                          subtitle: Text(_detailData!.tanggal),
-                                        )
-                                      ],
+                                        ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      "Pesan Tiket",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  child: Card(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                            "Lokasi",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w600),
-                                          ),
-                                          subtitle: Text(_detailData!.lokasi),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Card(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                            "Bintang Tamu",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w600),
-                                          ),
-                                          subtitle:
-                                              Text(_detailData!.bintangtamu),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                                const SizedBox(height: 32),
                               ],
                             ),
-                            ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => OrderPage(
-                                              id: _detailData!.id,
-                                              endpoint: "tiket")));
-                                },
-                                child: Text("Pesan Tiket"))
-                          ],
-                        ),
-                      )
-                    : Text("No data available..."));
+                          ),
+                        ],
+                      ),
+                    )
+                  : const Center(
+                      child: Text("No data available",
+                          style: TextStyle(color: Colors.white))),
+    );
+  }
+
+  Widget _infoCard(String title, String value) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

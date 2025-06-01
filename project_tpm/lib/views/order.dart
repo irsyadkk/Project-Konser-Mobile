@@ -24,6 +24,25 @@ class _OrderPageState extends State<OrderPage>
   bool _isLoading = false;
   String? _errormsg;
   Tiket? _detailData;
+  String _selectedCur = 'IDR';
+
+  final Map<String, double> _exchangeRates = {
+    'IDR': 1.0,
+    'USD': 0.000061,
+    'EUR': 0.000054,
+    'SGD': 0.000079,
+    'JPY': 0.008787,
+    'MYR': 0.00026,
+  };
+
+  String _convertHarga(int harga) {
+    double rate = _exchangeRates[_selectedCur] ?? 1;
+    double converted = harga * rate;
+    // Format harga: misal 2 desimal
+    return _selectedCur == 'IDR'
+        ? 'IDR ${harga.toString()}'
+        : '$_selectedCur ${converted.toStringAsFixed(2)}';
+  }
 
   @override
   void initState() {
@@ -36,14 +55,10 @@ class _OrderPageState extends State<OrderPage>
 
   Future<void> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    String? nama = prefs.getString('user_nama');
-    int? umur = prefs.getInt('user_umur');
-    String? email = prefs.getString('user_email');
-
     setState(() {
-      _namaController.text = nama ?? '';
-      _umurController.text = umur.toString();
-      _emailController.text = email ?? '';
+      _namaController.text = prefs.getString('user_nama') ?? '';
+      _umurController.text = prefs.getInt('user_umur')?.toString() ?? '';
+      _emailController.text = prefs.getString('user_email') ?? '';
     });
   }
 
@@ -96,105 +111,164 @@ class _OrderPageState extends State<OrderPage>
     });
   }
 
+  Widget buildInfoCard(String title, String value, {Color? color}) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: color ?? const Color.fromARGB(255, 40, 40, 40),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: const Color.fromARGB(255, 255, 228, 131),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildInfoCardHarga(String title, String value, {Color? color}) {
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: color ?? const Color.fromARGB(255, 40, 40, 40),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: const Color.fromARGB(255, 255, 228, 131),
+              ),
+            ),
+            Row(
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(
+                  width: 150,
+                ),
+                DropdownButton<String>(
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  value: _selectedCur,
+                  items: _exchangeRates.keys.map((String currency) {
+                    return DropdownMenuItem<String>(
+                      value: currency,
+                      child: Text(currency),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCur = value!;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : _errormsg != null
-                  ? Center(child: Text("Error $_errormsg"))
-                  : _detailData != null
-                      ? Text(
-                          _detailData?.nama ?? "???",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      : Text("Failed to get Name..."),
-          centerTitle: true,
+      appBar: AppBar(
+        title: Text(
+          _detailData?.nama ?? "Order Tiket",
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        body: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : _errormsg != null
-                ? Center(child: Text("Error $_errormsg"))
-                : _detailData != null
-                    ? SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Card(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                            "Tanggal",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w600),
-                                          ),
-                                          subtitle: Text(_detailData!.tanggal),
-                                        )
-                                      ],
+        centerTitle: true,
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errormsg != null
+              ? Center(child: Text("Error $_errormsg"))
+              : _detailData != null
+                  ? SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          buildInfoCard("Tanggal", _detailData!.tanggal),
+                          buildInfoCardHarga(
+                              "Harga", _convertHarga(_detailData!.harga)),
+                          buildInfoCard("Quota", _detailData!.quota.toString()),
+                          const SizedBox(height: 24),
+                          _detailData!.quota <= 0
+                              ? const Padding(
+                                  padding: EdgeInsets.only(top: 12.0),
+                                  child: Text(
+                                    "Maaf, kuota tiket habis.",
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: _detailData!.quota > 0
+                                      ? orderHandler
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        const Color.fromARGB(255, 255, 196, 35),
+                                    foregroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 32, vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Pesan',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
                                     ),
                                   ),
                                 ),
-                                Expanded(
-                                  child: Card(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                            "Harga Tiket Masuk",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w600),
-                                          ),
-                                          subtitle: Text(
-                                              _detailData!.harga.toString()),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Card(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ListTile(
-                                          title: Text(
-                                            "Quota Tersisa",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w600),
-                                          ),
-                                          subtitle: Text(
-                                              _detailData!.quota.toString()),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: orderHandler,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xfff7c846),
-                                foregroundColor: Colors.black,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 100, vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: Text('Order',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Text("No data available..."));
+                        ],
+                      ),
+                    )
+                  : const Center(child: Text("No data available...")),
+    );
   }
 }

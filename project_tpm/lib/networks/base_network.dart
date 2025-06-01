@@ -58,6 +58,44 @@ class BaseNetwork {
     }
   }
 
+  //GET BY EMAIL RETURN LIST
+  static Future<List<dynamic>> getDataListByEmail(
+      String endpoint, String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final response =
+        await http.get(Uri.parse('$baseUrl$endpoint/$email'), headers: {
+      'content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['data'] ?? [];
+    } else {
+      throw Exception('Failed to load data...${response.statusCode}');
+    }
+  }
+
+  //GET BY EMAIL
+  static Future<Map<String, dynamic>> getDataByEmail(
+      String endpoint, String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final response =
+        await http.get(Uri.parse('$baseUrl$endpoint/$email'), headers: {
+      'content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['data'] ?? [];
+    } else {
+      throw Exception('Failed to load data...${response.statusCode}');
+    }
+  }
+
   //DETAIL
   static Future<Map<String, dynamic>> getDetailData(
       String endpoint, int id) async {

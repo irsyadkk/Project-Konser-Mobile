@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:project_tpm/presenters/regis_presenter.dart';
 import 'package:project_tpm/views/login.dart';
@@ -16,7 +17,7 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
   final _passwordController = TextEditingController();
   final _umurController = TextEditingController();
   bool _obscureText = true;
-  String? _errormsg = '';
+  String? _errormsg;
   bool _isLoading = false;
 
   @override
@@ -26,13 +27,29 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
   }
 
   void regisHandler() {
+    final nama = _usernameController.text.trim();
+    final umur = _umurController.text.trim();
+    final email = _emailController.text.trim();
+    final pass = _passwordController.text.trim();
+
+    if (nama.isEmpty || umur.isEmpty || email.isEmpty || pass.isEmpty) {
+      showSnackbar("Semua field harus diisi");
+      return;
+    }
+
     final data = {
-      'nama': _usernameController.text,
-      'umur': _umurController.text,
-      'email': _emailController.text,
-      'pass': _passwordController.text,
+      'nama': nama,
+      'umur': umur,
+      'email': email,
+      'pass': pass,
     };
     presenter.regisUser('register', data);
+  }
+
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -54,12 +71,16 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
   void showError(String msg) {
     setState(() {
       _errormsg = msg;
+      _isLoading = false;
     });
+    showSnackbar(msg);
   }
 
   @override
   void showLoading() {
-    _isLoading = true;
+    setState(() {
+      _isLoading = true;
+    });
   }
 
   @override
@@ -67,6 +88,7 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
     _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _umurController.dispose();
     super.dispose();
   }
 
@@ -75,25 +97,30 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: const Text(""),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Center(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
                       const Text(
                         'SIGN UP',
-                        style: TextStyle(fontSize: 24, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Username
+                      const SizedBox(height: 32),
                       TextField(
                         controller: _usernameController,
                         style: const TextStyle(color: Colors.white),
@@ -107,8 +134,6 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Umur
                       TextField(
                         controller: _umurController,
                         style: const TextStyle(color: Colors.white),
@@ -123,12 +148,10 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Email
                       TextField(
-                        keyboardType: TextInputType.emailAddress,
                         controller: _emailController,
                         style: const TextStyle(color: Colors.white),
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: 'Email',
                           labelStyle: const TextStyle(color: Colors.white70),
@@ -139,8 +162,6 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Password
                       TextField(
                         controller: _passwordController,
                         obscureText: _obscureText,
@@ -165,23 +186,52 @@ class _DaftarPageState extends State<DaftarPage> implements RegisView {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Tombol Daftar
-                      ElevatedButton(
-                        onPressed: () {
-                          regisHandler();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xfff7c846),
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 100, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: regisHandler,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xfff7c846),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text(
+                            'Daftar',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
                         ),
-                        child: const Text('Daftar'),
                       ),
+                      const SizedBox(height: 20),
+                      RichText(
+                        text: TextSpan(
+                          text: 'Sudah punya akun? ',
+                          style: const TextStyle(color: Colors.white),
+                          children: [
+                            TextSpan(
+                              text: 'Login',
+                              style: const TextStyle(
+                                color: Color(0xfff7c846),
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => const LoginPage()),
+                                  );
+                                },
+                            ),
+                          ],
+                        ),
+                      )
                     ],
                   ),
                 ),

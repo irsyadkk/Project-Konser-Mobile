@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:project_tpm/models/user_model.dart';
 import 'package:project_tpm/presenters/login_presenter.dart';
 import 'package:project_tpm/views/admin.dart';
@@ -30,11 +31,18 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
+    if (email == 'admin@gmail.com' && password == 'admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminPage()),
+      );
+      return;
+    }
+
     final data = {
       'email': email,
       'pass': password,
     };
-
     presenter.loginUser('login', data);
   }
 
@@ -47,18 +55,10 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
 
   @override
   void onLoginSuccess(User user) {
-    // Cek email, menentukan page selanjutnya
-    if (user.email == "admin@gmail.com") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminPage()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
 
   @override
@@ -78,98 +78,136 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const Text(
-                        'LOGIN',
-                        style: TextStyle(
+          : Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 0, 0, 0),
+                    Color.fromARGB(255, 0, 0, 0)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Welcome Back!',
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 32),
-                      TextField(
-                        keyboardType: TextInputType.emailAddress,
-                        controller: _emailController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          filled: true,
-                          fillColor: Colors.white10,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscureText,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          filled: true,
-                          fillColor: Colors.white10,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureText
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Colors.white54,
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Silakan login untuk melanjutkan',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 40),
+                        TextField(
+                          controller: _emailController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            prefixIcon:
+                                const Icon(Icons.email, color: Colors.white54),
+                            labelText: 'Email',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Colors.white10, // <- disamakan
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
                             ),
-                            onPressed: () {
-                              setState(() => _obscureText = !_obscureText);
-                            },
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      if (_errormsg != null && _errormsg!.isNotEmpty)
-                        Text(_errormsg!,
-                            style: const TextStyle(color: Colors.redAccent)),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: loginHandler,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xfff7c846),
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 100, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Login',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Padding(padding: EdgeInsets.all(24.0)),
-                          const Text('Belum punya akun?'),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const DaftarPage()),
-                              );
-                            },
-                            child: const Text('Daftar dulu aja !',
-                                style: TextStyle(color: Colors.blue)),
+                        const SizedBox(height: 20),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: _obscureText,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            prefixIcon:
+                                const Icon(Icons.lock, color: Colors.white54),
+                            labelText: 'Password',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            filled: true,
+                            fillColor: Colors.white10, // <- disamakan
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.white54,
+                              ),
+                              onPressed: () {
+                                setState(() => _obscureText = !_obscureText);
+                              },
+                            ),
                           ),
-                        ],
-                      )
-                    ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (_errormsg != null && _errormsg!.isNotEmpty)
+                          Text(
+                            _errormsg!,
+                            style: const TextStyle(color: Colors.redAccent),
+                          ),
+                        const SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: loginHandler,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xfff7c846),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 100, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        RichText(
+                          text: TextSpan(
+                            text: 'Belum punya akun? ',
+                            style: const TextStyle(color: Colors.white),
+                            children: [
+                              TextSpan(
+                                text: 'Daftar',
+                                style: const TextStyle(
+                                  color: Color(0xfff7c846),
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => const DaftarPage()),
+                                    );
+                                  },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 ),
               ),

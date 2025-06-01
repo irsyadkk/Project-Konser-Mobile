@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:project_tpm/models/konser_model.dart';
 import 'package:project_tpm/models/pengunjung_model.dart';
+import 'package:project_tpm/models/profile_photo.dart';
 import 'package:project_tpm/models/tiket_model.dart';
 import 'package:project_tpm/models/user_model.dart';
 import 'package:project_tpm/presenters/konser_presenter.dart';
@@ -16,16 +19,18 @@ class AdminPage extends StatefulWidget {
   State<AdminPage> createState() => _AdminPageState();
 }
 
-enum AdminMenu { pengunjung, konser, user, tiket }
+enum AdminMenu { konser, tiket, pengunjung, user }
 
 class _AdminPageState extends State<AdminPage>
     implements PengunjungView, KonserView, UserView, TiketView {
+  late Box box;
   late PengunjungPresenter _presenterPengunjung;
   late KonserPresenter _presenterKonser;
   late UserPresenter _presenterUser;
   late TiketPresenter _presenterTiket;
 
   bool _isLoading = false;
+  bool _isSearching = false;
   String? _errormsg;
 
   // Data list per kategori
@@ -33,6 +38,9 @@ class _AdminPageState extends State<AdminPage>
   List<Konser> _konserList = [];
   List<User> _userList = [];
   List<Tiket> _tiketList = [];
+  List<Konser> _filteredKonserList = [];
+  List<User> _filteredUserList = [];
+  List<Tiket> _filteredTiketList = [];
   // nanti buat List<Konser> _konserList, List<User> _userList, List<Tiket> _tiketList
 
   // Controller untuk form tambah data (sesuaikan dengan kebutuhan)
@@ -44,16 +52,72 @@ class _AdminPageState extends State<AdminPage>
   final _hargaController = TextEditingController();
   final _quotaController = TextEditingController();
 
-  AdminMenu _selectedMenu = AdminMenu.pengunjung;
+  final _konserSearchController = TextEditingController();
+  final _userSearchController = TextEditingController();
+  final _tiketSearchController = TextEditingController();
+
+  AdminMenu _selectedMenu = AdminMenu.konser;
+
+  TextEditingController? getCurrentSearchController() {
+    switch (_selectedMenu) {
+      case AdminMenu.konser:
+        return _konserSearchController;
+      case AdminMenu.user:
+        return _userSearchController;
+      case AdminMenu.tiket:
+        return _tiketSearchController;
+      default:
+        return null;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    box = Hive.box<ProfilePhoto>('profile_photos');
     _presenterPengunjung = PengunjungPresenter(this);
     _presenterKonser = KonserPresenter(this);
     _presenterUser = UserPresenter(this);
     _presenterTiket = TiketPresenter(this);
-    fetchPengunjung();
+    _konserSearchController.addListener(_onSearchKonserChanged);
+    _userSearchController.addListener(_onSearchUserChanged);
+    _tiketSearchController.addListener(_onSearchTiketChanged);
+    fetchKonser();
+  }
+
+  @override
+  void dispose() {
+    _konserSearchController.dispose();
+    _userSearchController.dispose();
+    _tiketSearchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchKonserChanged() {
+    final query = _konserSearchController.text.toLowerCase();
+    setState(() {
+      _filteredKonserList = _konserList
+          .where((konser) => konser.nama.toLowerCase().contains(query))
+          .toList();
+    });
+  }
+
+  void _onSearchUserChanged() {
+    final query = _userSearchController.text.toLowerCase();
+    setState(() {
+      _filteredUserList = _userList.where((user) {
+        return user.email.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  void _onSearchTiketChanged() {
+    final query = _tiketSearchController.text.toLowerCase();
+    setState(() {
+      _filteredTiketList = _tiketList.where((tiket) {
+        return tiket.nama.toLowerCase().contains(query);
+      }).toList();
+    });
   }
 
   @override
@@ -80,16 +144,19 @@ class _AdminPageState extends State<AdminPage>
   @override
   void showKonserList(List<Konser> konserList) {
     _konserList = konserList;
+    _filteredKonserList = konserList;
   }
 
   @override
   void showUserList(List<User> userList) {
     _userList = userList;
+    _filteredUserList = userList;
   }
 
   @override
   void showTiketList(List<Tiket> tiketList) {
     _tiketList = tiketList;
+    _filteredTiketList = tiketList;
   }
 
   @override
@@ -416,17 +483,8 @@ class _AdminPageState extends State<AdminPage>
               ),
             ),
             ListTile(
-              title: const Text('List Pengunjung',
-                  style: TextStyle(color: Colors.white)),
-              selected: _selectedMenu == AdminMenu.pengunjung,
-              onTap: () {
-                Navigator.pop(context);
-                fetchPengunjung();
-              },
-            ),
-            ListTile(
-              title: const Text('List Konser',
-                  style: TextStyle(color: Colors.white)),
+              title:
+                  const Text('Konser', style: TextStyle(color: Colors.white)),
               selected: _selectedMenu == AdminMenu.konser,
               onTap: () {
                 Navigator.pop(context);
@@ -438,27 +496,34 @@ class _AdminPageState extends State<AdminPage>
               },
             ),
             ListTile(
-              title: const Text('List User',
-                  style: TextStyle(color: Colors.white)),
-              selected: _selectedMenu == AdminMenu.user,
-              onTap: () {
-                Navigator.pop(context);
-                fetchUser();
-                setState(() {
-                  _selectedMenu = AdminMenu.user;
-                  _errormsg = null;
-                });
-              },
-            ),
-            ListTile(
-              title: const Text('List Tiket',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text('Tiket', style: TextStyle(color: Colors.white)),
               selected: _selectedMenu == AdminMenu.tiket,
               onTap: () {
                 Navigator.pop(context);
                 fetchTiket();
                 setState(() {
                   _selectedMenu = AdminMenu.tiket;
+                  _errormsg = null;
+                });
+              },
+            ),
+            ListTile(
+              title: const Text('Pengunjung',
+                  style: TextStyle(color: Colors.white)),
+              selected: _selectedMenu == AdminMenu.pengunjung,
+              onTap: () {
+                Navigator.pop(context);
+                fetchPengunjung();
+              },
+            ),
+            ListTile(
+              title: const Text('User', style: TextStyle(color: Colors.white)),
+              selected: _selectedMenu == AdminMenu.user,
+              onTap: () {
+                Navigator.pop(context);
+                fetchUser();
+                setState(() {
+                  _selectedMenu = AdminMenu.user;
                   _errormsg = null;
                 });
               },
@@ -535,9 +600,9 @@ class _AdminPageState extends State<AdminPage>
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: _konserList.length,
+                itemCount: _filteredKonserList.length,
                 itemBuilder: (context, index) {
-                  final konser = _konserList[index];
+                  final konser = _filteredKonserList[index];
                   return Card(
                     color: Colors.white10,
                     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -574,13 +639,23 @@ class _AdminPageState extends State<AdminPage>
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: _userList.length,
+                itemCount: _filteredUserList.length,
                 itemBuilder: (context, index) {
-                  final user = _userList[index];
+                  final user = _filteredUserList[index];
+                  final profilePhoto = box.get(user.email);
+                  final photoPath = profilePhoto?.photoPath;
                   return Card(
                     color: Colors.white10,
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: ListTile(
+                      leading: (photoPath != null && photoPath.isNotEmpty)
+                          ? CircleAvatar(
+                              backgroundImage: FileImage(File(photoPath)),
+                            )
+                          : CircleAvatar(
+                              backgroundColor: Colors.grey,
+                              child: Icon(Icons.person, color: Colors.white),
+                            ),
                       title: Text(user.email),
                       subtitle: Text("${user.nama}, ${user.umur} Tahun",
                           style: const TextStyle(color: Colors.white70)),
@@ -606,9 +681,9 @@ class _AdminPageState extends State<AdminPage>
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: _tiketList.length,
+                itemCount: _filteredTiketList.length,
                 itemBuilder: (context, index) {
-                  final tiket = _tiketList[index];
+                  final tiket = _filteredTiketList[index];
                   return Card(
                     color: Colors.white10,
                     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -642,10 +717,52 @@ class _AdminPageState extends State<AdminPage>
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Admin'),
+        title: _isSearching && getCurrentSearchController() != null
+            ? TextField(
+                controller: getCurrentSearchController(),
+                autofocus: true,
+                cursorColor: goldYellow,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: _selectedMenu == AdminMenu.konser ||
+                          _selectedMenu == AdminMenu.tiket
+                      ? 'Cari Konser...'
+                      : 'Cari Email...',
+                  hintStyle: TextStyle(color: Colors.white70),
+                  border: InputBorder.none,
+                ),
+              )
+            : Text('Admin'),
         backgroundColor: Colors.black,
         foregroundColor: goldYellow,
         actions: [
+          if (getCurrentSearchController() != null)
+            if (_isSearching)
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = false;
+                    getCurrentSearchController()!.clear();
+                    if (_selectedMenu == AdminMenu.konser) {
+                      _filteredKonserList = _konserList;
+                    } else if (_selectedMenu == AdminMenu.user) {
+                      _filteredUserList = _userList;
+                    } else if (_selectedMenu == AdminMenu.tiket) {
+                      _filteredTiketList = _tiketList;
+                    }
+                  });
+                },
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = true;
+                  });
+                },
+              ),
           IconButton(
             icon: Icon(Icons.logout, color: goldYellow),
             onPressed: () {
