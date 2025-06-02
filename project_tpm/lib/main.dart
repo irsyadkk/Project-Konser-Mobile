@@ -24,7 +24,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await Permission.notification.request();
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -69,6 +68,9 @@ void main() async {
   Hive.registerAdapter(ProfilePhotoAdapter());
   await Hive.openBox<ProfilePhoto>('profile_photos');
   await FirebaseMessaging.instance.subscribeToTopic('konser');
+  FirebaseMessaging.instance.getToken().then((token) {
+    print("FCM Token: $token");
+  });
   runApp(const MyApp());
 }
 

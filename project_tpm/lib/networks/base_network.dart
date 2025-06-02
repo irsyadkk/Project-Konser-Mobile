@@ -134,7 +134,7 @@ class BaseNetwork {
     }
   }
 
-  // ORDER
+  //  ORDER
   static Future<bool> order(
       String endpoint, Map<String, dynamic> data, int id) async {
     final prefs = await SharedPreferences.getInstance();
@@ -145,10 +145,14 @@ class BaseNetwork {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode(data));
+
     if (response.statusCode == 200) {
       return true;
+    } else if (response.statusCode == 409) {
+      // Tiket sudah dipesan
+      throw Exception("Gagal memesan tiket.");
     } else {
-      throw Exception("Failed to make order...${response.statusCode}");
+      throw Exception("Maaf satu akun,satu tiket...${response.statusCode}");
     }
   }
 
