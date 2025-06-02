@@ -66,6 +66,14 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
     setState(() {
       _errormsg = msg;
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -120,7 +128,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                             labelText: 'Email',
                             labelStyle: const TextStyle(color: Colors.white70),
                             filled: true,
-                            fillColor: Colors.white10, // <- disamakan
+                            fillColor: Colors.white10,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                               borderSide: BorderSide.none,
@@ -138,7 +146,7 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
                             labelText: 'Password',
                             labelStyle: const TextStyle(color: Colors.white70),
                             filled: true,
-                            fillColor: Colors.white10, // <- disamakan
+                            fillColor: Colors.white10,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                               borderSide: BorderSide.none,

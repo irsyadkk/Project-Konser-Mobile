@@ -94,6 +94,20 @@ class _DetailPageState extends State<DetailPage> implements DetailKonserView {
                               width: double.infinity,
                               height: 550,
                               fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: double.infinity,
+                                  height: 550,
+                                  color: Colors.grey[800],
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 80,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(height: 24),

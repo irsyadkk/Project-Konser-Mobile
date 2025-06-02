@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:project_tpm/models/profile_photo.dart';
-import 'package:project_tpm/views/admin.dart';
-import 'package:project_tpm/views/home.dart';
 import 'views/login.dart';
 
 void main() async {
@@ -20,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Login Demo',
+      title: 'Project',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: const LoginPage(),

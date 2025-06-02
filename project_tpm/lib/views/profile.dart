@@ -1,7 +1,7 @@
+// Tambahan import
 import 'dart:io';
-import 'package:hive/hive.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:project_tpm/models/pengunjung_model.dart';
 import 'package:project_tpm/models/profile_photo.dart';
@@ -10,7 +10,6 @@ import 'package:project_tpm/presenters/detailpengunjung_presenter.dart';
 import 'package:project_tpm/presenters/detailuser_presenter.dart';
 import 'package:project_tpm/presenters/user_presenter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home.dart';
 import 'login.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -44,7 +43,6 @@ class _ProfilePageState extends State<ProfilePage>
 
   Future<void> savePhoto(String email, String photoPath) async {
     final box = Hive.box<ProfilePhoto>('profile_photos');
-    // Update atau buat baru
     final profilePhoto = ProfilePhoto(email: email, photoPath: photoPath);
     await box.put(email, profilePhoto);
   }
@@ -52,6 +50,9 @@ class _ProfilePageState extends State<ProfilePage>
   Future<void> deletePhoto(String email) async {
     final box = Hive.box<ProfilePhoto>('profile_photos');
     await box.delete(email);
+    setState(() {
+      localPhotoPath = null;
+    });
   }
 
   Future<void> loadLocalPhoto() async {
@@ -116,7 +117,25 @@ class _ProfilePageState extends State<ProfilePage>
   @override
   void showUserList(List<User> userList) {}
 
-  Future<void> showPhotoOptions() async {
+  Future<void> openCamera() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('user_email');
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null && email != null) {
+      await savePhoto(email, pickedFile.path);
+      await loadLocalPhoto();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: const Text("Foto berhasil ditambahkan"),
+        ),
+      );
+    }
+  }
+
+  Future<void> showCameraOptions() async {
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString('user_email');
 
@@ -132,29 +151,28 @@ class _ProfilePageState extends State<ProfilePage>
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt, color: Colors.white),
-              title: const Text('Ambil Gambar',
+              title: const Text("Ambil Foto",
                   style: TextStyle(color: Colors.white)),
               onTap: () async {
                 Navigator.pop(context);
-                final picker = ImagePicker();
-                final pickedFile =
-                    await picker.pickImage(source: ImageSource.camera);
-                if (pickedFile != null && email != null) {
-                  await savePhoto(email, pickedFile.path);
-                  await loadLocalPhoto();
-                }
+                await openCamera();
               },
             ),
             if (localPhotoPath != null)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.white),
-                title: const Text('Hapus Gambar',
+                title: const Text("Hapus Foto",
                     style: TextStyle(color: Colors.white)),
                 onTap: () async {
                   Navigator.pop(context);
                   if (email != null) {
                     await deletePhoto(email);
-                    await loadLocalPhoto();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: Colors.green,
+                        content: const Text("Foto berhasil dihapus"),
+                      ),
+                    );
                   }
                 },
               ),
@@ -183,7 +201,7 @@ class _ProfilePageState extends State<ProfilePage>
         foregroundColor: yellowAccent,
         actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 16),
             child: IconButton(
               style: IconButton.styleFrom(
                 backgroundColor: Colors.redAccent,
@@ -198,17 +216,18 @@ class _ProfilePageState extends State<ProfilePage>
           )
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: showPhotoOptions,
-                  child: CircleAvatar(
-                    radius: 80,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 120,
                     backgroundColor: Colors.grey,
                     backgroundImage: localPhotoPath != null
                         ? FileImage(File(localPhotoPath!))
@@ -218,83 +237,94 @@ class _ProfilePageState extends State<ProfilePage>
                             size: 90, color: Colors.black)
                         : null,
                   ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  _detailUser?.nama ?? '',
-                  style: TextStyle(
-                      fontSize: 24,
-                      color: yellowAccent,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  _detailUser?.email ?? '',
-                  style: const TextStyle(color: Colors.white70, fontSize: 18),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "Tiket yang kamu miliki :",
-                  style: const TextStyle(color: Colors.white70, fontSize: 18),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _pengunjungList.length,
-                  itemBuilder: (context, index) {
-                    final tiket = _pengunjungList[index].tiket;
-                    return Text(
-                      "- $tiket",
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                    );
-                  },
-                ),
-              ],
+                  Positioned(
+                    bottom: 5,
+                    right: 5,
+                    child: InkWell(
+                      onTap: showCameraOptions,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 40,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 24),
+            Text(
+              _detailUser?.nama ?? '',
+              style: TextStyle(
+                  fontSize: 24,
+                  color: yellowAccent,
+                  fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              _detailUser?.email ?? '',
+              style: const TextStyle(color: Colors.white70, fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 30),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Tiket yang kamu miliki:",
+                style: TextStyle(
+                  color: yellowAccent,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _pengunjungList.isEmpty
+                ? const Text(
+                    "Belum ada tiket",
+                    style: TextStyle(color: Colors.white70),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _pengunjungList.length,
+                    itemBuilder: (context, index) {
+                      final tiket = _pengunjungList[index].tiket;
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        color: Colors.grey[900],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.confirmation_num,
+                                  color: Colors.white70),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  tiket,
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _infoCard(String title, String value) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 6,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -586,44 +586,89 @@ class _AdminPageState extends State<AdminPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Tombol untuk menambahkan konser baru
               IconButton(
-                  onPressed: () {
-                    addKonserHandler();
-                  },
-                  icon: Icon(Icons.add)),
-              Text('Data Konser:',
-                  style: TextStyle(
-                      color: goldYellow,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  addKonserHandler();
+                },
+                icon: const Icon(Icons.add, color: Colors.white),
+              ),
+
+              // Judul bagian
+              Text(
+                'Data Konser:',
+                style: TextStyle(
+                  color: goldYellow,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 12),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _filteredKonserList.length,
-                itemBuilder: (context, index) {
-                  final konser = _filteredKonserList[index];
-                  return Card(
-                    color: Colors.white10,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      leading: Image.network(konser.poster),
-                      title: Text(konser.nama),
-                      subtitle: Text("${konser.lokasi}, ${konser.tanggal}",
-                          style: const TextStyle(color: Colors.white70)),
-                      trailing: ElevatedButton(
+
+              // Placeholder jika daftar kosong
+              if (_filteredKonserList.isEmpty)
+                Center(
+                  child: Column(
+                    children: const [
+                      Icon(Icons.event_busy, size: 64, color: Colors.white54),
+                      SizedBox(height: 12),
+                      Text(
+                        "Belum ada konser yang tersedia.",
+                        style: TextStyle(color: Colors.white54, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                // Daftar konser
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _filteredKonserList.length,
+                  itemBuilder: (context, index) {
+                    final konser = _filteredKonserList[index];
+                    return Card(
+                      color: Colors.white10,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        leading: Image.network(
+                          konser.poster,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.image_not_supported,
+                                  color: Colors.grey),
+                        ),
+                        title: Text(
+                          konser.nama,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          "${konser.lokasi}, ${konser.tanggal}",
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        trailing: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white24,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                           onPressed: () {
                             editKonserHandler(konser);
                           },
                           child: const Icon(Icons.arrow_forward_ios,
-                              color: Colors.redAccent)),
-                    ),
-                  );
-                },
-              ),
+                              color: Colors.redAccent),
+                        ),
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
         );
+
       case AdminMenu.user:
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -764,7 +809,7 @@ class _AdminPageState extends State<AdminPage>
                 },
               ),
           IconButton(
-            icon: Icon(Icons.logout, color: goldYellow),
+            icon: Icon(Icons.logout, color: Colors.redAccent),
             onPressed: () {
               Navigator.pushReplacement(
                 context,

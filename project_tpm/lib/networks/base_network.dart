@@ -7,7 +7,7 @@ class BaseNetwork {
   static const String baseUrl =
       'https://api-konser-559917148272.us-central1.run.app/';
 
-  //LOGIN
+  // LOGIN
   static Future<User> loginUser(
       String endpoint, Map<String, dynamic> data) async {
     final response = await http.post(Uri.parse(baseUrl + endpoint),
@@ -15,6 +15,7 @@ class BaseNetwork {
           'content-type': 'application/json',
         },
         body: jsonEncode(data));
+
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
       final accessToken = body['accessToken'];
@@ -28,20 +29,22 @@ class BaseNetwork {
         await prefs.setString('user_nama', user['nama']);
         return User.fromJson(user, accessToken);
       } else {
-        throw Exception("Token atau data tidak ada...${response.statusCode}");
+        throw Exception("Token atau data tidak ada");
       }
+    } else if (response.statusCode == 401) {
+      throw Exception("Username atau password salah");
     } else {
-      throw Exception("Failed to login...${response.statusCode}");
+      throw Exception("Username atau password salah${response.statusCode}");
     }
   }
 
-  //LOGOUT
+  // LOGOUT
   static Future<void> logoutUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
 
-  //GET
+  // GET
   static Future<List<dynamic>> getData(String endpoint) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
@@ -58,7 +61,7 @@ class BaseNetwork {
     }
   }
 
-  //GET BY EMAIL RETURN LIST
+  // GET BY EMAIL RETURN LIST
   static Future<List<dynamic>> getDataListByEmail(
       String endpoint, String email) async {
     final prefs = await SharedPreferences.getInstance();
@@ -77,7 +80,7 @@ class BaseNetwork {
     }
   }
 
-  //GET BY EMAIL
+  // GET BY EMAIL
   static Future<Map<String, dynamic>> getDataByEmail(
       String endpoint, String email) async {
     final prefs = await SharedPreferences.getInstance();
@@ -90,13 +93,13 @@ class BaseNetwork {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['data'] ?? [];
+      return data['data'] ?? {};
     } else {
       throw Exception('Failed to load data...${response.statusCode}');
     }
   }
 
-  //DETAIL
+  // DETAIL
   static Future<Map<String, dynamic>> getDetailData(
       String endpoint, int id) async {
     final prefs = await SharedPreferences.getInstance();
@@ -108,13 +111,13 @@ class BaseNetwork {
     });
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['data'] ?? [];
+      return data['data'] ?? {};
     } else {
       throw Exception('Failed to load detail data...${response.statusCode}');
     }
   }
 
-  //REGIS
+  // REGIS
   static Future<bool> regisUser(
       String endpoint, Map<String, dynamic> data) async {
     final response = await http.post(
@@ -127,11 +130,11 @@ class BaseNetwork {
     if (response.statusCode == 201) {
       return true;
     } else {
-      throw Exception("Failed to register user...${response.statusCode}");
+      throw Exception("Username sudah dipakai${response.statusCode}");
     }
   }
 
-  //ORDER
+  // ORDER
   static Future<bool> order(
       String endpoint, Map<String, dynamic> data, int id) async {
     final prefs = await SharedPreferences.getInstance();
@@ -149,7 +152,7 @@ class BaseNetwork {
     }
   }
 
-  //EDIT
+  // EDIT
   static Future<bool> edit(
       String endpoint, Map<String, dynamic> data, int id) async {
     final prefs = await SharedPreferences.getInstance();
@@ -167,7 +170,7 @@ class BaseNetwork {
     }
   }
 
-  //POST
+  // POST
   static Future<bool> post(String endpoint, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
@@ -184,7 +187,7 @@ class BaseNetwork {
     }
   }
 
-  //DELETE
+  // DELETE
   static Future<bool> delete(String endpoint, int id) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');

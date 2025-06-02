@@ -22,7 +22,6 @@ class _OrderPageState extends State<OrderPage>
   final _namaController = TextEditingController();
   final _umurController = TextEditingController();
   bool _isLoading = false;
-  String? _errormsg;
   Tiket? _detailData;
   String _selectedCur = 'IDR';
 
@@ -38,7 +37,6 @@ class _OrderPageState extends State<OrderPage>
   String _convertHarga(int harga) {
     double rate = _exchangeRates[_selectedCur] ?? 1;
     double converted = harga * rate;
-    // Format harga: misal 2 desimal
     return _selectedCur == 'IDR'
         ? 'IDR ${harga.toString()}'
         : '$_selectedCur ${converted.toStringAsFixed(2)}';
@@ -67,6 +65,22 @@ class _OrderPageState extends State<OrderPage>
   }
 
   void orderHandler() {
+    int umur = int.tryParse(_umurController.text) ?? 0;
+
+    if (umur < 17) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Maaf, umur minimal untuk memesan tiket adalah 17 tahun.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     final data = {
       'nama': _namaController.text,
       'umur': _umurController.text,
@@ -100,8 +114,19 @@ class _OrderPageState extends State<OrderPage>
   @override
   void showError(String msg) {
     setState(() {
-      _errormsg = msg;
+      _isLoading = false;
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          msg == "Akun sudah pernah pesan" ? "Maaf, satu akun satu tiket" : msg,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -127,10 +152,10 @@ class _OrderPageState extends State<OrderPage>
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: const Color.fromARGB(255, 255, 228, 131),
+                color: Color.fromARGB(255, 255, 228, 131),
               ),
             ),
             const SizedBox(height: 8),
@@ -164,10 +189,10 @@ class _OrderPageState extends State<OrderPage>
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: const Color.fromARGB(255, 255, 228, 131),
+                color: Color.fromARGB(255, 255, 228, 131),
               ),
             ),
             Row(
@@ -180,11 +205,10 @@ class _OrderPageState extends State<OrderPage>
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(
-                  width: 150,
-                ),
+                const SizedBox(width: 150),
                 DropdownButton<String>(
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                   value: _selectedCur,
                   items: _exchangeRates.keys.map((String currency) {
                     return DropdownMenuItem<String>(
@@ -218,57 +242,54 @@ class _OrderPageState extends State<OrderPage>
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _errormsg != null
-              ? Center(child: Text("Error $_errormsg"))
-              : _detailData != null
-                  ? SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          buildInfoCard("Tanggal", _detailData!.tanggal),
-                          buildInfoCardHarga(
-                              "Harga", _convertHarga(_detailData!.harga)),
-                          buildInfoCard("Quota", _detailData!.quota.toString()),
-                          const SizedBox(height: 24),
-                          _detailData!.quota <= 0
-                              ? const Padding(
-                                  padding: EdgeInsets.only(top: 12.0),
-                                  child: Text(
-                                    "Maaf, kuota tiket habis.",
-                                    style: TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                )
-                              : ElevatedButton(
-                                  onPressed: _detailData!.quota > 0
-                                      ? orderHandler
-                                      : null,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        const Color.fromARGB(255, 255, 196, 35),
-                                    foregroundColor: Colors.black,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 32, vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Pesan',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
+          : _detailData != null
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      buildInfoCard("Tanggal", _detailData!.tanggal),
+                      buildInfoCardHarga(
+                          "Harga", _convertHarga(_detailData!.harga)),
+                      buildInfoCard("Quota", _detailData!.quota.toString()),
+                      const SizedBox(height: 24),
+                      _detailData!.quota <= 0
+                          ? const Padding(
+                              padding: EdgeInsets.only(top: 12.0),
+                              child: Text(
+                                "Maaf, kuota tiket habis.",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                        ],
-                      ),
-                    )
-                  : const Center(child: Text("No data available...")),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : ElevatedButton(
+                              onPressed:
+                                  _detailData!.quota > 0 ? orderHandler : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    const Color.fromARGB(255, 255, 196, 35),
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32, vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Pesan',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                    ],
+                  ),
+                )
+              : const Center(child: Text("No data available...")),
     );
   }
 }

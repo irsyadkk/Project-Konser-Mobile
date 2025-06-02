@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:project_tpm/models/konser_model.dart';
@@ -123,7 +122,7 @@ class _HomePageState extends State<HomePage> implements KonserView {
                 setState(() {
                   _isSearching = false;
                   _searchController.clear();
-                  _filteredKonserList = _konserList; // Reset list
+                  _filteredKonserList = _konserList;
                 });
               },
             )
@@ -205,6 +204,26 @@ class _HomePageState extends State<HomePage> implements KonserView {
                 height: 220,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 220,
+                    width: double.infinity,
+                    color: Colors.grey[800],
+                    alignment: Alignment.center,
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.broken_image,
+                            size: 60, color: Colors.white70),
+                        SizedBox(height: 8),
+                        Text(
+                          'Gambar tidak tersedia',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
             Padding(
