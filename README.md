@@ -1,5 +1,5 @@
 # 📱Aplikasi Tiket Konser 
-Aplikasi ini dibuat dengan tujuan untuk memenuhi Tugas Akhir Praktikum Teknologi dan Pemrograman Mobile
+Aplikasi dimana kita dapat memilih dan membeli tiket konser !
 
 ## 🔗Link API
 Link API Konser dapat diakses di link berikut https://api-konser-559917148272.us-central1.run.app/
