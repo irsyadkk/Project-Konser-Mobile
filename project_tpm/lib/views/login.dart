@@ -30,15 +30,6 @@ class _LoginPageState extends State<LoginPage> implements LoginView {
   void loginHandler() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-
-    if (email == 'admin@gmail.com' && password == 'admin') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminPage()),
-      );
-      return;
-    }
-
     final data = {
       'email': email,
       'pass': password,

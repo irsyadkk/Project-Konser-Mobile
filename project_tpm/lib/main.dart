@@ -6,7 +6,6 @@ import 'package:project_tpm/models/profile_photo.dart';
 import 'views/login.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 // Inisialisasi local notification plugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
